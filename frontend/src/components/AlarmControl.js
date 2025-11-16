@@ -13,8 +13,8 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
           )}
         </div>
         <div className="status-text">
-          <h3>System Status</h3>
-          <p>{alarmActive ? 'ALARM ACTIVE' : 'All Systems Normal'}</p>
+          <h3>Status Systemu</h3>
+          <p>{alarmActive ? 'AKTYWNY ALARM' : 'Wszystkie Systemy Normalne'}</p>
         </div>
       </div>
 
@@ -25,7 +25,7 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
           disabled={!alarmActive || !alarmSound}
         >
           <span className="icon">🔇</span>
-          <span>Silence Alarm</span>
+          <span>Wycisz Alarm</span>
         </button>
 
         <button
@@ -33,7 +33,7 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
           className="btn-control test"
         >
           <span className="icon">🔔</span>
-          <span>Test System</span>
+          <span>Testuj System</span>
         </button>
       </div>
     </div>

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import './ScenarioSelector.css';
 
 const scenarios = [
-  { id: 'normal', name: 'Normal Operation', description: 'All sensors reading normal levels' },
-  { id: 'singleAlarm', name: 'Single Room Alarm', description: 'High smoke level in Kitchen (Room 2)' },
-  { id: 'multipleAlarms', name: 'Multiple Room Alarms', description: 'High smoke levels in multiple rooms' },
-  { id: 'gradualIncrease', name: 'Gradual Smoke Increase', description: 'Simulating gradual smoke buildup in Room 1' },
-  { id: 'intermittent', name: 'Intermittent Spikes', description: 'Random spikes simulating cooking/steam' },
-  { id: 'systemTest', name: 'Full System Test', description: 'Testing all sensor states sequentially' }
+  { id: 'normal', name: 'Normalna Praca', description: 'Wszystkie czujniki w normalnych poziomach' },
+  { id: 'singleAlarm', name: 'Alarm w Jednym Pokoju', description: 'Wysoki poziom dymu w Kuchni (Pokój 2)' },
+  { id: 'multipleAlarms', name: 'Alarmy w Wielu Pokojach', description: 'Wysokie poziomy dymu w wielu pokojach' },
+  { id: 'gradualIncrease', name: 'Stopniowy Wzrost Dymu', description: 'Symulacja stopniowego narastania dymu w Pokoju 1' },
+  { id: 'intermittent', name: 'Przerywane Skoki', description: 'Losowe skoki symulujące gotowanie/parę' },
+  { id: 'systemTest', name: 'Pełny Test Systemu', description: 'Testowanie sekwencyjne wszystkich stanów czujników' }
 ];
 
 const ScenarioSelector = ({ onScenarioChange }) => {
@@ -32,8 +32,8 @@ const ScenarioSelector = ({ onScenarioChange }) => {
   return (
     <div className="scenario-selector">
       <div className="scenario-header">
-        <h3>Test Scenarios</h3>
-        <p className="scenario-subtitle">Simulate different alarm conditions</p>
+        <h3>Scenariusze Testowe</h3>
+        <p className="scenario-subtitle">Symuluj różne warunki alarmowe</p>
       </div>
 
       <div className="scenario-list">
@@ -53,7 +53,7 @@ const ScenarioSelector = ({ onScenarioChange }) => {
       {loading && (
         <div className="scenario-loading">
           <span className="spinner">⏳</span>
-          <span>Activating scenario...</span>
+          <span>Aktywowanie scenariusza...</span>
         </div>
       )}
     </div>

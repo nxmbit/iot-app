@@ -102,7 +102,7 @@ function App() {
         setAlarmSound(true);
         setSystemStatus('alarm');
         playAlarmSound();
-        showNotification(`ALARM: High smoke detected in ${data.roomId}!`);
+        showNotification(`ALARM: Wykryto wysoki poziom dymu w ${data.roomId}!`);
         break;
         
       case 'alarm-clear':
@@ -197,7 +197,7 @@ function App() {
   // Show browser notification
   const showNotification = (message) => {
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Smart Building Alert', {
+      new Notification('Alert Inteligentnego Budynku', {
         body: message,
         icon: '/alarm-icon.png'
       });
@@ -300,10 +300,10 @@ function App() {
         {/* Left Panel - Floor Plan */}
         <div className="left-panel">
           <div className="panel-header">
-            <h2>Building Floor Plan</h2>
+            <h2>Plan Piętra Budynku</h2>
             {alarmActive && (
               <div className="alarm-indicator">
-                🚨 ALARM ACTIVE
+                🚨 AKTYWNY ALARM
               </div>
             )}
           </div>
@@ -347,7 +347,7 @@ function App() {
           
           {/* Sensor List */}
           <div className="sensor-list">
-            <h3>All Sensors</h3>
+            <h3>Wszystkie Czujniki</h3>
             <div className="sensor-grid">
               {sensors.map(sensor => (
                 <div 

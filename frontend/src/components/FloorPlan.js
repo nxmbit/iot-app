@@ -133,11 +133,11 @@ const FloorPlan = ({ sensors, selectedRoom, onRoomSelect }) => {
         
         {/* Legend */}
         <g transform="translate(10, 330)">
-          <text x="0" y="0" fontSize="10" fill="#666">Legend:</text>
+          <text x="0" y="0" fontSize="10" fill="#666">Legenda:</text>
           <circle cx="60" cy="-3" r="5" fill="#4caf50" />
           <text x="70" y="0" fontSize="10" fill="#666">Online</text>
           <circle cx="120" cy="-3" r="5" fill="#ffaa00" />
-          <text x="130" y="0" fontSize="10" fill="#666">Warning</text>
+          <text x="130" y="0" fontSize="10" fill="#666">Ostrzeżenie</text>
           <circle cx="180" cy="-3" r="5" fill="#ff4444" />
           <text x="190" y="0" fontSize="10" fill="#666">Alarm</text>
         </g>
