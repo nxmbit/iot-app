@@ -374,67 +374,94 @@ app.get('/api/system/status', (req, res) => {
   });
 });
 
+// Helper function to reset all sensors before scenario
+const resetAllSensors = (client) => {
+  for (let i = 1; i <= 6; i++) {
+    client.publish(`building/floor1/room${i}/reset`, '', { qos: 1 });
+  }
+  logger.info('Reset commands sent to all sensors');
+};
+
 // Scenario functions
 const scenarios = {
   normal: (client) => {
-    for (let i = 1; i <= 6; i++) {
-      const smokeLevel = Math.random() * 10; // 0-10%
-      client.publish(`building/floor1/room${i}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
-      client.publish(`building/floor1/room${i}/status`, 'normal', { qos: 1 });
-    }
+    resetAllSensors(client);
+    // Wait a bit for reset to take effect
+    setTimeout(() => {
+      for (let i = 1; i <= 6; i++) {
+        const smokeLevel = Math.random() * 10; // 0-10%
+        client.publish(`building/floor1/room${i}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
+        client.publish(`building/floor1/room${i}/status`, 'normal', { qos: 1 });
+      }
+    }, 500);
   },
 
   singleAlarm: (client) => {
-    // Normal levels for most rooms
-    [1, 3, 4, 5, 6].forEach(room => {
-      const smokeLevel = Math.random() * 10;
-      client.publish(`building/floor1/room${room}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
-    });
-    // High level in kitchen
-    client.publish('building/floor1/room2/smoke', '75', { qos: 1, retain: true });
-    client.publish('building/floor1/room2/status', 'alarm', { qos: 1 });
+    resetAllSensors(client);
+    setTimeout(() => {
+      // Normal levels for most rooms
+      [1, 3, 4, 5, 6].forEach(room => {
+        const smokeLevel = Math.random() * 10;
+        client.publish(`building/floor1/room${room}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
+      });
+      // High level in kitchen
+      client.publish('building/floor1/room2/smoke', '75', { qos: 1, retain: true });
+      client.publish('building/floor1/room2/status', 'alarm', { qos: 1 });
+    }, 500);
   },
 
   multipleAlarms: (client) => {
-    const alarmRooms = [2, 3, 5];
-    for (let i = 1; i <= 6; i++) {
-      const smokeLevel = alarmRooms.includes(i) ? 60 + Math.random() * 30 : Math.random() * 10;
-      client.publish(`building/floor1/room${i}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
-      client.publish(`building/floor1/room${i}/status`, smokeLevel > 50 ? 'alarm' : 'normal', { qos: 1 });
-    }
+    resetAllSensors(client);
+    setTimeout(() => {
+      const alarmRooms = [2, 3, 5];
+      for (let i = 1; i <= 6; i++) {
+        const smokeLevel = alarmRooms.includes(i) ? 60 + Math.random() * 30 : Math.random() * 10;
+        client.publish(`building/floor1/room${i}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
+        client.publish(`building/floor1/room${i}/status`, smokeLevel > 50 ? 'alarm' : 'normal', { qos: 1 });
+      }
+    }, 500);
   },
 
   gradualIncrease: (client) => {
-    let level = 0;
-    const interval = setInterval(() => {
-      level += 5;
-      client.publish('building/floor1/room1/smoke', level.toString(), { qos: 1, retain: true });
-      logger.info(`Room 1 smoke level: ${level}%`);
+    resetAllSensors(client);
+    setTimeout(() => {
+      let level = 0;
+      const interval = setInterval(() => {
+        level += 5;
+        client.publish('building/floor1/room1/smoke', level.toString(), { qos: 1, retain: true });
+        logger.info(`Room 1 smoke level: ${level}%`);
 
-      if (level >= 80) {
-        clearInterval(interval);
-        logger.info('Peak reached, maintaining high level');
-      }
-    }, 1000);
+        if (level >= 80) {
+          clearInterval(interval);
+          logger.info('Peak reached, maintaining high level');
+        }
+      }, 1000);
+    }, 500);
   },
 
   intermittent: (client) => {
-    const interval = setInterval(() => {
-      const room = Math.floor(Math.random() * 6) + 1;
-      const spike = Math.random() < 0.3;
-      const level = spike ? 30 + Math.random() * 25 : Math.random() * 10;
+    resetAllSensors(client);
+    setTimeout(() => {
+      const interval = setInterval(() => {
+        const room = Math.floor(Math.random() * 6) + 1;
+        const spike = Math.random() < 0.3;
+        const level = spike ? 30 + Math.random() * 25 : Math.random() * 10;
 
-      client.publish(`building/floor1/room${room}/smoke`, level.toString(), { qos: 1, retain: true });
-      if (spike) {
-        logger.info(`Spike in Room ${room}: ${level.toFixed(1)}%`);
-      }
-    }, 2000);
+        client.publish(`building/floor1/room${room}/smoke`, level.toString(), { qos: 1, retain: true });
+        if (spike) {
+          logger.info(`Spike in Room ${room}: ${level.toFixed(1)}%`);
+        }
+      }, 2000);
 
-    // Stop after 60 seconds
-    setTimeout(() => clearInterval(interval), 60000);
+      // Stop after 60 seconds
+      setTimeout(() => clearInterval(interval), 60000);
+    }, 500);
   },
 
   systemTest: async (client) => {
+    resetAllSensors(client);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     const states = ['normal', 'warning', 'alarm'];
     const levels = [5, 35, 65];
 
