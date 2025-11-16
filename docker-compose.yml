@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # MQTT Broker
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    networks:
+      - iot-network
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: backend-api
+    ports:
+      - "3001:3001"
+      - "8080:8080"
+    environment:
+      - MQTT_BROKER_URL=mqtt://mosquitto:1883
+      - WS_PORT=8080
+      - API_PORT=3001
+      - NODE_ENV=production
+    depends_on:
+      - mosquitto
+    networks:
+      - iot-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Simulated Sensors
+  sensors:
+    build: ./sensors
+    container_name: iot-sensors
+    environment:
+      - MQTT_BROKER_URL=mqtt://mosquitto:1883
+      - SIMULATION_MODE=realistic
+      - NUM_ROOMS=6
+    depends_on:
+      - mosquitto
+      - backend
+    networks:
+      - iot-network
+    volumes:
+      - ./sensors:/app
+      - /app/node_modules
+
+  # Frontend Dashboard
+  frontend:
+    build: ./frontend
+    container_name: frontend-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_WS_URL=ws://localhost:8080
+    depends_on:
+      - backend
+    networks:
+      - iot-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+networks:
+  iot-network:
+    driver: bridge

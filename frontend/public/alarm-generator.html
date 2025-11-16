@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Alarm Sound Generator</title>
+</head>
+<body>
+    <h1>Alarm Sound Generator</h1>
+    <p>This page generates an alarm.mp3 file using Web Audio API</p>
+    <button id="generate">Generate and Download Alarm Sound</button>
+    <audio id="preview" controls style="margin-top: 20px; display: none;"></audio>
+    
+    <script>
+    document.getElementById('generate').addEventListener('click', function() {
+        // Create audio context
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const sampleRate = audioContext.sampleRate;
+        const duration = 2; // 2 second alarm sound
+        const numSamples = sampleRate * duration;
+        
+        // Create buffer
+        const buffer = audioContext.createBuffer(1, numSamples, sampleRate);
+        const channel = buffer.getChannelData(0);
+        
+        // Generate alarm sound (alternating frequency beeps)
+        for (let i = 0; i < numSamples; i++) {
+            const time = i / sampleRate;
+            const beepFreq = (Math.floor(time * 4) % 2) ? 800 : 600;
+            const amplitude = 0.3 * (1 - (time % 0.25) / 0.25); // Fade effect
+            channel[i] = amplitude * Math.sin(2 * Math.PI * beepFreq * time);
+        }
+        
+        // Convert to WAV
+        const wav = audioBufferToWav(buffer);
+        const blob = new Blob([wav], { type: 'audio/wav' });
+        
+        // Create download link
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'alarm.mp3'; // Browser will convert
+        a.click();
+        
+        // Preview
+        document.getElementById('preview').src = url;
+        document.getElementById('preview').style.display = 'block';
+    });
+    
+    function audioBufferToWav(buffer) {
+        const length = buffer.length * buffer.numberOfChannels * 2;
+        const arrayBuffer = new ArrayBuffer(44 + length);
+        const view = new DataView(arrayBuffer);
+        const channels = [];
+        let offset = 0;
+        let pos = 0;
+        
+        // Write WAV header
+        const setUint16 = (data) => {
+            view.setUint16(pos, data, true);
+            pos += 2;
+        };
+        const setUint32 = (data) => {
+            view.setUint32(pos, data, true);
+            pos += 4;
+        };
+        
+        // RIFF identifier
+        setUint32(0x46464952);
+        setUint32(36 + length);
+        setUint32(0x45564157);
+        
+        // fmt sub-chunk
+        setUint32(0x20746d66);
+        setUint32(16);
+        setUint16(1);
+        setUint16(buffer.numberOfChannels);
+        setUint32(buffer.sampleRate);
+        setUint32(buffer.sampleRate * 2 * buffer.numberOfChannels);
+        setUint16(buffer.numberOfChannels * 2);
+        setUint16(16);
+        
+        // data sub-chunk
+        setUint32(0x61746164);
+        setUint32(length);
+        
+        // Write interleaved data
+        const channelData = [];
+        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+            channelData.push(buffer.getChannelData(channel));
+        }
+        
+        let sample;
+        for (let i = 0; i < buffer.length; i++) {
+            for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
+                sample = Math.max(-1, Math.min(1, channelData[channel][i]));
+                sample = sample * 0x7FFF;
+                view.setInt16(pos, sample, true);
+                pos += 2;
+            }
+        }
+        
+        return arrayBuffer;
+    }
+    </script>
+</body>
+</html>

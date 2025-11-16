@@ -1,0 +1,50 @@
+.floor-plan-container {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 10px;
+  overflow: auto;
+}
+
+.floor-plan-svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.room {
+  transition: all 0.3s ease;
+}
+
+.room:hover {
+  filter: brightness(0.95);
+}
+
+.room-label {
+  font-size: 14px;
+  font-weight: 600;
+  fill: #333;
+  pointer-events: none;
+}
+
+.smoke-level {
+  font-size: 24px;
+  font-weight: bold;
+  fill: #000;
+}
+
+.alarm-dot {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0.3; }
+}
+
+.smoke-effect {
+  animation: smoke 3s infinite;
+}
+
+@keyframes smoke {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}

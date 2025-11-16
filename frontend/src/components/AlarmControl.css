@@ -1,0 +1,126 @@
+.alarm-control {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.alarm-control.active {
+  background: linear-gradient(135deg, #ffe4e1 0%, #ffcccb 100%);
+  box-shadow: 0 4px 20px rgba(231, 76, 60, 0.3);
+}
+
+.alarm-status {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.status-icon {
+  font-size: 36px;
+}
+
+.alarm-icon {
+  animation: shake 0.5s infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.safe-icon {
+  color: #27ae60;
+}
+
+.status-text h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.status-text p {
+  margin: 5px 0 0 0;
+  color: #7f8c8d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.alarm-control.active .status-text p {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.alarm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-control {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  color: #495057;
+}
+
+.btn-control:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-control:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-control .icon {
+  font-size: 24px;
+}
+
+.btn-control.silence {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.btn-control.test {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.emergency-info {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+}
+
+.emergency-info h4 {
+  margin: 0 0 10px 0;
+  color: #e74c3c;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.emergency-info ol {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.emergency-info li {
+  margin: 5px 0;
+}
