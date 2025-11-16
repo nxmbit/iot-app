@@ -19,7 +19,7 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
       </div>
 
       <div className="alarm-actions">
-        <button 
+        <button
           onClick={onSilence}
           className="btn-control silence"
           disabled={!alarmActive || !alarmSound}
@@ -27,8 +27,8 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
           <span className="icon">🔇</span>
           <span>Silence Alarm</span>
         </button>
-        
-        <button 
+
+        <button
           onClick={onTest}
           className="btn-control test"
         >
@@ -36,18 +36,6 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
           <span>Test System</span>
         </button>
       </div>
-
-      {alarmActive && (
-        <div className="emergency-info">
-          <h4>Emergency Procedures:</h4>
-          <ol>
-            <li>Evacuate the building immediately</li>
-            <li>Call emergency services: 911</li>
-            <li>Meet at designated assembly point</li>
-            <li>Do not re-enter until all clear</li>
-          </ol>
-        </div>
-      )}
     </div>
   );
 };

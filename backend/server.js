@@ -364,7 +364,7 @@ app.get('/api/rooms', (req, res) => {
 app.get('/api/system/status', (req, res) => {
   const activeAlarms = Array.from(sensorData.values()).filter(s => s.isAlarmActive);
   const warnings = Array.from(sensorData.values()).filter(s => s.status === 'warning');
-  
+
   res.json({
     totalRooms: rooms.length,
     activeAlarms: activeAlarms.length,
@@ -372,6 +372,100 @@ app.get('/api/system/status', (req, res) => {
     systemStatus: activeAlarms.length > 0 ? 'alarm' : 'normal',
     timestamp: new Date().toISOString()
   });
+});
+
+// Scenario functions
+const scenarios = {
+  normal: (client) => {
+    for (let i = 1; i <= 6; i++) {
+      const smokeLevel = Math.random() * 10; // 0-10%
+      client.publish(`building/floor1/room${i}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
+      client.publish(`building/floor1/room${i}/status`, 'normal', { qos: 1 });
+    }
+  },
+
+  singleAlarm: (client) => {
+    // Normal levels for most rooms
+    [1, 3, 4, 5, 6].forEach(room => {
+      const smokeLevel = Math.random() * 10;
+      client.publish(`building/floor1/room${room}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
+    });
+    // High level in kitchen
+    client.publish('building/floor1/room2/smoke', '75', { qos: 1, retain: true });
+    client.publish('building/floor1/room2/status', 'alarm', { qos: 1 });
+  },
+
+  multipleAlarms: (client) => {
+    const alarmRooms = [2, 3, 5];
+    for (let i = 1; i <= 6; i++) {
+      const smokeLevel = alarmRooms.includes(i) ? 60 + Math.random() * 30 : Math.random() * 10;
+      client.publish(`building/floor1/room${i}/smoke`, smokeLevel.toString(), { qos: 1, retain: true });
+      client.publish(`building/floor1/room${i}/status`, smokeLevel > 50 ? 'alarm' : 'normal', { qos: 1 });
+    }
+  },
+
+  gradualIncrease: (client) => {
+    let level = 0;
+    const interval = setInterval(() => {
+      level += 5;
+      client.publish('building/floor1/room1/smoke', level.toString(), { qos: 1, retain: true });
+      logger.info(`Room 1 smoke level: ${level}%`);
+
+      if (level >= 80) {
+        clearInterval(interval);
+        logger.info('Peak reached, maintaining high level');
+      }
+    }, 1000);
+  },
+
+  intermittent: (client) => {
+    const interval = setInterval(() => {
+      const room = Math.floor(Math.random() * 6) + 1;
+      const spike = Math.random() < 0.3;
+      const level = spike ? 30 + Math.random() * 25 : Math.random() * 10;
+
+      client.publish(`building/floor1/room${room}/smoke`, level.toString(), { qos: 1, retain: true });
+      if (spike) {
+        logger.info(`Spike in Room ${room}: ${level.toFixed(1)}%`);
+      }
+    }, 2000);
+
+    // Stop after 60 seconds
+    setTimeout(() => clearInterval(interval), 60000);
+  },
+
+  systemTest: async (client) => {
+    const states = ['normal', 'warning', 'alarm'];
+    const levels = [5, 35, 65];
+
+    for (let state = 0; state < states.length; state++) {
+      logger.info(`Setting all sensors to: ${states[state]}`);
+      for (let room = 1; room <= 6; room++) {
+        client.publish(`building/floor1/room${room}/smoke`, levels[state].toString(), { qos: 1, retain: true });
+        client.publish(`building/floor1/room${room}/status`, states[state], { qos: 1 });
+      }
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+  }
+};
+
+// Scenario trigger endpoint
+app.post('/api/scenarios/:scenarioId', (req, res) => {
+  const { scenarioId } = req.params;
+
+  if (!scenarios[scenarioId]) {
+    return res.status(404).json({ error: 'Scenario not found' });
+  }
+
+  logger.info(`Triggering scenario: ${scenarioId}`);
+
+  try {
+    scenarios[scenarioId](mqttClient);
+    res.json({ success: true, scenarioId });
+  } catch (error) {
+    logger.error(`Error executing scenario ${scenarioId}:`, error);
+    res.status(500).json({ error: 'Failed to execute scenario' });
+  }
 });
 
 // Start Express server

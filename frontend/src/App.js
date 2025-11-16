@@ -6,6 +6,7 @@ import SensorPanel from './components/SensorPanel';
 import AlarmControl from './components/AlarmControl';
 import StatusBar from './components/StatusBar';
 import HistoryChart from './components/HistoryChart';
+import ScenarioSelector from './components/ScenarioSelector';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8080';
@@ -20,7 +21,9 @@ function App() {
   const [sensorHistory, setSensorHistory] = useState({});
   
   const ws = useRef(null);
-  const audioRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const oscillatorRef = useRef(null);
+  const gainNodeRef = useRef(null);
   const reconnectTimeout = useRef(null);
 
   // Initialize WebSocket connection
@@ -133,21 +136,61 @@ function App() {
     }
   };
 
-  // Play alarm sound
+  // Play alarm sound using Web Audio API
   const playAlarmSound = () => {
-    if (audioRef.current) {
-      audioRef.current.loop = true;
-      audioRef.current.play().catch(err => {
-        console.error('Error playing alarm sound:', err);
-      });
+    try {
+      // Create audio context if it doesn't exist
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      // Stop any existing sound first
+      stopAlarmSound();
+
+      const audioContext = audioContextRef.current;
+
+      // Create oscillator (alarm beep)
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Set alarm sound parameters (alternating tones)
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+
+      // Create beeping pattern by modulating gain
+      const beepInterval = 0.5; // seconds
+      let time = audioContext.currentTime;
+      for (let i = 0; i < 100; i++) {
+        gainNode.gain.setValueAtTime(0.3, time);
+        gainNode.gain.setValueAtTime(0, time + beepInterval / 2);
+        time += beepInterval;
+      }
+
+      oscillator.start();
+      oscillatorRef.current = oscillator;
+      gainNodeRef.current = gainNode;
+    } catch (err) {
+      console.error('Error playing alarm sound:', err);
     }
   };
 
   // Stop alarm sound
   const stopAlarmSound = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    try {
+      if (oscillatorRef.current) {
+        oscillatorRef.current.stop();
+        oscillatorRef.current.disconnect();
+        oscillatorRef.current = null;
+      }
+      if (gainNodeRef.current) {
+        gainNodeRef.current.disconnect();
+        gainNodeRef.current = null;
+      }
+    } catch (err) {
+      console.error('Error stopping alarm sound:', err);
     }
   };
 
@@ -194,6 +237,15 @@ function App() {
     sendCommand({ type: 'test-alarm', roomId });
   };
 
+  // Handle scenario change
+  const handleScenarioChange = async (scenarioId) => {
+    try {
+      await axios.post(`${API_URL}/api/scenarios/${scenarioId}`);
+    } catch (error) {
+      console.error('Error triggering scenario:', error);
+    }
+  };
+
   // Fetch initial data
   useEffect(() => {
     // Request notification permission
@@ -236,11 +288,8 @@ function App() {
 
   return (
     <div className="App">
-      {/* Hidden audio element for alarm sound */}
-      <audio ref={audioRef} src="/alarm.mp3" />
-      
       {/* Status Bar */}
-      <StatusBar 
+      <StatusBar
         systemStatus={systemStatus}
         wsConnected={wsConnected}
         stats={stats}
@@ -267,6 +316,9 @@ function App() {
         
         {/* Right Panel - Controls and Info */}
         <div className="right-panel">
+          {/* Scenario Selector */}
+          <ScenarioSelector onScenarioChange={handleScenarioChange} />
+
           {/* Alarm Controls */}
           <AlarmControl
             alarmActive={alarmActive}
