@@ -194,6 +194,33 @@ function App() {
     sendCommand({ type: 'test-alarm', roomId });
   };
 
+  // New Control Scenario Functions
+
+  // Trigger alarm for specific room
+  const triggerRoomAlarm = (roomId) => {
+    sendCommand({ type: 'trigger-room-alarm', roomId });
+  };
+
+  // Trigger alarm for all rooms
+  const triggerGlobalAlarm = () => {
+    sendCommand({ type: 'trigger-global-alarm' });
+  };
+
+  // Reset specific room status (clear alarm and smoke level)
+  const resetRoomStatus = (roomId) => {
+    sendCommand({ type: 'reset-room-status', roomId });
+  };
+
+  // Reset all rooms status
+  const resetGlobalStatus = () => {
+    sendCommand({ type: 'reset-global-status' });
+  };
+
+  // Manually set smoke level for a room
+  const setManualSmokeLevel = (roomId, smokeLevel) => {
+    sendCommand({ type: 'set-manual-smoke-level', roomId, smokeLevel });
+  };
+
   // Fetch initial data
   useEffect(() => {
     // Request notification permission
@@ -273,6 +300,8 @@ function App() {
             alarmSound={alarmSound}
             onSilence={silenceAlarms}
             onTest={() => testAlarm(selectedRoom || 'room1')}
+            onTriggerGlobalAlarm={triggerGlobalAlarm}
+            onResetGlobalStatus={resetGlobalStatus}
           />
           
           {/* Selected Sensor Details */}
@@ -283,6 +312,9 @@ function App() {
                 onReset={() => resetAlarm(selectedRoom)}
                 onUpdateThreshold={(threshold) => updateThreshold(selectedRoom, threshold)}
                 onTest={() => testAlarm(selectedRoom)}
+                onTriggerAlarm={() => triggerRoomAlarm(selectedRoom)}
+                onResetStatus={() => resetRoomStatus(selectedRoom)}
+                onSetSmokeLevel={(smokeLevel) => setManualSmokeLevel(selectedRoom, smokeLevel)}
               />
               
               <HistoryChart

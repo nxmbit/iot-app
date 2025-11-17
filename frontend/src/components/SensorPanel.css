@@ -110,8 +110,28 @@
 
 .sensor-actions {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 15px;
   margin-top: 20px;
+}
+
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-group h4 {
+  margin: 0;
+  font-size: 12px;
+  color: #7f8c8d;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.action-group button {
+  flex: 1;
 }
 
 .btn {
@@ -154,6 +174,47 @@
   padding: 5px 10px;
   font-size: 12px;
   flex: none;
+}
+
+.btn-inline {
+  padding: 3px 8px;
+  font-size: 11px;
+  margin-left: 10px;
+  flex: none;
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-info {
+  background: #3498db;
+  color: white;
+}
+
+.manual-badge {
+  color: #e67e22;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.smoke-level-edit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.smoke-level-edit input[type="range"] {
+  flex: 1;
+}
+
+.smoke-level-edit span {
+  min-width: 40px;
+  font-weight: bold;
 }
 
 .alarm-warning {

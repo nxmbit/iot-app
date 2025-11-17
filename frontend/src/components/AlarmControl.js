@@ -1,7 +1,7 @@
 import React from 'react';
 import './AlarmControl.css';
 
-const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
+const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest, onTriggerGlobalAlarm, onResetGlobalStatus }) => {
   return (
     <div className={`alarm-control ${alarmActive ? 'active' : ''}`}>
       <div className="alarm-status">
@@ -19,7 +19,7 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
       </div>
 
       <div className="alarm-actions">
-        <button 
+        <button
           onClick={onSilence}
           className="btn-control silence"
           disabled={!alarmActive || !alarmSound}
@@ -27,14 +27,35 @@ const AlarmControl = ({ alarmActive, alarmSound, onSilence, onTest }) => {
           <span className="icon">🔇</span>
           <span>Silence Alarm</span>
         </button>
-        
-        <button 
+
+        <button
           onClick={onTest}
           className="btn-control test"
         >
           <span className="icon">🔔</span>
           <span>Test System</span>
         </button>
+      </div>
+
+      <div className="global-controls">
+        <h4>Global Controls</h4>
+        <div className="global-actions">
+          <button
+            onClick={onTriggerGlobalAlarm}
+            className="btn-control trigger-global"
+          >
+            <span className="icon">🚨</span>
+            <span>Trigger All Alarms</span>
+          </button>
+
+          <button
+            onClick={onResetGlobalStatus}
+            className="btn-control reset-global"
+          >
+            <span className="icon">🔄</span>
+            <span>Reset All Rooms</span>
+          </button>
+        </div>
       </div>
 
       {alarmActive && (

@@ -99,6 +99,36 @@
   color: #0c5460;
 }
 
+.btn-control.trigger-global {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.btn-control.reset-global {
+  background: #d4edda;
+  color: #155724;
+}
+
+.global-controls {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #ecf0f1;
+}
+
+.global-controls h4 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.global-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .emergency-info {
   margin-top: 20px;
   padding: 15px;
