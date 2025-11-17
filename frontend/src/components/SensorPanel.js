@@ -30,7 +30,7 @@ const SensorPanel = ({ sensor, onReset, onUpdateThreshold, onTest }) => {
 
       <div className="sensor-metrics">
         <div className="metric">
-          <label>Smoke Level</label>
+          <label>Poziom Dymu</label>
           <div className="metric-value" style={{ color: sensor.smokeLevel > sensor.threshold ? '#e74c3c' : '#2c3e50' }}>
             {sensor.smokeLevel.toFixed(1)}%
           </div>
@@ -57,7 +57,7 @@ const SensorPanel = ({ sensor, onReset, onUpdateThreshold, onTest }) => {
         </div>
 
         <div className="metric">
-          <label>Threshold</label>
+          <label>Próg Alarmu</label>
           {isEditing ? (
             <div className="threshold-edit">
               <input
@@ -69,24 +69,24 @@ const SensorPanel = ({ sensor, onReset, onUpdateThreshold, onTest }) => {
               />
               <span>{threshold}%</span>
               <button onClick={handleThresholdUpdate} className="btn btn-small btn-primary">
-                Save
+                Zapisz
               </button>
               <button onClick={() => setIsEditing(false)} className="btn btn-small">
-                Cancel
+                Anuluj
               </button>
             </div>
           ) : (
             <div className="threshold-display">
               <span className="metric-value">{sensor.threshold}%</span>
               <button onClick={() => setIsEditing(true)} className="btn btn-small">
-                Edit
+                Edytuj
               </button>
             </div>
           )}
         </div>
 
         <div className="metric">
-          <label>Last Update</label>
+          <label>Ostatnia Aktualizacja</label>
           <div className="timestamp">
             {new Date(sensor.lastUpdate).toLocaleTimeString()}
           </div>
@@ -94,24 +94,24 @@ const SensorPanel = ({ sensor, onReset, onUpdateThreshold, onTest }) => {
       </div>
 
       <div className="sensor-actions">
-        <button 
-          onClick={onReset} 
+        <button
+          onClick={onReset}
           className="btn btn-success"
           disabled={!sensor.isAlarmActive}
         >
-          Reset Alarm
+          Resetuj Alarm
         </button>
-        <button 
+        <button
           onClick={onTest}
           className="btn btn-warning"
         >
-          Test Alarm
+          Testuj Alarm
         </button>
       </div>
 
       {sensor.isAlarmActive && (
         <div className="alarm-warning">
-          ⚠️ ALARM ACTIVE - High smoke level detected!
+          ⚠️ AKTYWNY ALARM - Wykryto wysoki poziom dymu!
         </div>
       )}
     </div>

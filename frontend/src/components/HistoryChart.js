@@ -9,10 +9,10 @@ const HistoryChart = ({ data, threshold, roomName }) => {
   return (
     <div className="history-chart">
       <div className="chart-header">
-        <h3>Smoke Level History - {roomName}</h3>
-        <span className="chart-info">Last 30 readings</span>
+        <h3>Historia Poziomu Dymu - {roomName}</h3>
+        <span className="chart-info">Ostatnie 30 odczytów</span>
       </div>
-      
+
       {chartData.length > 0 ? (
         <ResponsiveContainer width="100%" height={200}>
           <LineChart
@@ -20,41 +20,41 @@ const HistoryChart = ({ data, threshold, roomName }) => {
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               tick={{ fontSize: 10 }}
               interval="preserveStartEnd"
             />
-            <YAxis 
+            <YAxis
               domain={[0, 100]}
               tick={{ fontSize: 10 }}
-              label={{ value: 'Smoke Level (%)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
+              label={{ value: 'Poziom Dymu (%)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
             />
-            <Tooltip 
+            <Tooltip
               formatter={(value) => `${value.toFixed(1)}%`}
-              labelFormatter={(label) => `Time: ${label}`}
+              labelFormatter={(label) => `Czas: ${label}`}
             />
             <Legend />
-            <ReferenceLine 
-              y={threshold} 
-              label="Alarm Threshold" 
-              stroke="#e74c3c" 
+            <ReferenceLine
+              y={threshold}
+              label="Próg Alarmu"
+              stroke="#e74c3c"
               strokeDasharray="5 5"
             />
-            <Line 
-              type="monotone" 
-              dataKey="value" 
-              stroke="#3498db" 
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke="#3498db"
               strokeWidth={2}
               dot={false}
-              name="Smoke Level"
+              name="Poziom Dymu"
               activeDot={{ r: 4 }}
             />
           </LineChart>
         </ResponsiveContainer>
       ) : (
         <div className="no-data">
-          No historical data available yet
+          Brak dostępnych danych historycznych
         </div>
       )}
     </div>
