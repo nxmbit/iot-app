@@ -7,6 +7,7 @@ import AlarmControl from './components/AlarmControl';
 import StatusBar from './components/StatusBar';
 import HistoryChart from './components/HistoryChart';
 import ScenarioSelector from './components/ScenarioSelector';
+import ControlPanel from './components/ControlPanel';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8080';
@@ -246,6 +247,47 @@ function App() {
     }
   };
 
+  // New Control Functions
+
+  // Handle control actions from ControlPanel
+  const handleControlAction = async (action) => {
+    try {
+      switch(action) {
+        case 'trigger-room':
+          if (selectedRoom) {
+            await axios.post(`${API_URL}/api/control/trigger-alarm/${selectedRoom}`);
+          }
+          break;
+        case 'trigger-all':
+          await axios.post(`${API_URL}/api/control/trigger-alarm-all`);
+          break;
+        case 'reset-room':
+          if (selectedRoom) {
+            await axios.post(`${API_URL}/api/control/reset/${selectedRoom}`);
+          }
+          break;
+        case 'reset-all':
+          await axios.post(`${API_URL}/api/control/reset-all`);
+          break;
+        default:
+          console.warn('Unknown control action:', action);
+      }
+    } catch (error) {
+      console.error('Error executing control action:', error);
+    }
+  };
+
+  // Handle manual smoke level setting
+  const handleSetSmokeLevel = async (roomId, smokeLevel) => {
+    try {
+      await axios.post(`${API_URL}/api/control/set-smoke/${roomId}`, {
+        smokeLevel: smokeLevel
+      });
+    } catch (error) {
+      console.error('Error setting smoke level:', error);
+    }
+  };
+
   // Fetch initial data
   useEffect(() => {
     // Request notification permission
@@ -316,6 +358,12 @@ function App() {
         
         {/* Right Panel - Controls and Info */}
         <div className="right-panel">
+          {/* Control Panel - NEW */}
+          <ControlPanel
+            selectedRoom={selectedRoom}
+            onControlAction={handleControlAction}
+          />
+
           {/* Scenario Selector */}
           <ScenarioSelector onScenarioChange={handleScenarioChange} />
 
@@ -326,7 +374,7 @@ function App() {
             onSilence={silenceAlarms}
             onTest={() => testAlarm(selectedRoom || 'room1')}
           />
-          
+
           {/* Selected Sensor Details */}
           {selectedRoom && (
             <>
@@ -335,6 +383,7 @@ function App() {
                 onReset={() => resetAlarm(selectedRoom)}
                 onUpdateThreshold={(threshold) => updateThreshold(selectedRoom, threshold)}
                 onTest={() => testAlarm(selectedRoom)}
+                onSetSmokeLevel={(smokeLevel) => handleSetSmokeLevel(selectedRoom, smokeLevel)}
               />
               
               <HistoryChart

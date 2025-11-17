@@ -50,6 +50,7 @@ rooms.forEach(room => {
     threshold: 50,
     status: 'normal',
     isAlarmActive: false,
+    isManuallySet: false,  // Flag to prevent automatic updates when user sets value manually
     lastUpdate: new Date().toISOString(),
     position: { x: room.x, y: room.y },
     dimensions: { width: room.width, height: room.height }
@@ -165,10 +166,16 @@ mqttClient.on('message', (topic, message) => {
       
       switch(dataType) {
         case 'smoke':
+          // Skip automatic updates if user has manually set the smoke level
+          if (sensor.isManuallySet) {
+            logger.info(`Skipping automatic smoke update for ${roomId} (manually set)`);
+            break;
+          }
+
           const smokeLevel = parseFloat(msgString);
           sensor.smokeLevel = smokeLevel;
           sensor.lastUpdate = new Date().toISOString();
-          
+
           // Check alarm condition
           if (smokeLevel > sensor.threshold) {
             if (!sensor.isAlarmActive) {
@@ -183,7 +190,7 @@ mqttClient.on('message', (topic, message) => {
               clearAlarm(roomId);
             }
           }
-          
+
           // Update status based on smoke level
           if (smokeLevel === 0) {
             sensor.status = 'normal';
@@ -192,7 +199,7 @@ mqttClient.on('message', (topic, message) => {
           } else if (smokeLevel < sensor.threshold) {
             sensor.status = 'warning';
           }
-          
+
           // Broadcast update
           broadcast({
             type: 'sensor-update',
@@ -289,15 +296,177 @@ function updateThreshold(roomId, threshold) {
   if (sensor) {
     sensor.threshold = threshold;
     sensorData.set(roomId, sensor);
-    
+
     mqttClient.publish(`building/floor1/${roomId}/threshold`, threshold.toString());
-    
+
     broadcast({
       type: 'threshold-update',
       roomId: roomId,
       threshold: threshold
     });
   }
+}
+
+// New Control Functions for Manual Scenarios
+
+/**
+ * Trigger alarm in a specific room by setting high smoke level
+ * @param {string} roomId - The room identifier (room1-room6)
+ */
+function triggerRoomAlarm(roomId) {
+  const sensor = sensorData.get(roomId);
+  if (!sensor) {
+    logger.error(`Cannot trigger alarm: Room ${roomId} not found`);
+    return;
+  }
+
+  logger.info(`Manually triggering alarm in ${roomId}`);
+
+  // Set high smoke level (above threshold)
+  sensor.smokeLevel = sensor.threshold + 20;
+  sensor.isAlarmActive = true;
+  sensor.status = 'alarm';
+  sensor.isManuallySet = true;  // Prevent automatic updates
+  sensor.lastUpdate = new Date().toISOString();
+
+  sensorData.set(roomId, sensor);
+
+  // Trigger alarm notification
+  triggerAlarm(roomId, sensor.smokeLevel);
+
+  // Broadcast update
+  broadcast({
+    type: 'sensor-update',
+    roomId: roomId,
+    data: sensor
+  });
+}
+
+/**
+ * Trigger alarm in all rooms
+ */
+function triggerGlobalAlarm() {
+  logger.info('Manually triggering alarm in ALL rooms');
+
+  rooms.forEach(room => {
+    triggerRoomAlarm(room.id);
+  });
+
+  broadcast({
+    type: 'global-alarm-trigger',
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Reset a specific room to safe state
+ * @param {string} roomId - The room identifier (room1-room6)
+ */
+function resetRoomStatus(roomId) {
+  const sensor = sensorData.get(roomId);
+  if (!sensor) {
+    logger.error(`Cannot reset: Room ${roomId} not found`);
+    return;
+  }
+
+  logger.info(`Manually resetting ${roomId} to safe state`);
+
+  // Reset to safe values
+  sensor.smokeLevel = 0;
+  sensor.isAlarmActive = false;
+  sensor.status = 'normal';
+  sensor.isManuallySet = false;  // Allow automatic updates to resume
+  sensor.lastUpdate = new Date().toISOString();
+
+  sensorData.set(roomId, sensor);
+
+  // Publish reset to MQTT
+  mqttClient.publish(`building/floor1/${roomId}/reset`, 'true');
+
+  // Clear alarm
+  clearAlarm(roomId);
+
+  // Broadcast update
+  broadcast({
+    type: 'sensor-update',
+    roomId: roomId,
+    data: sensor
+  });
+
+  broadcast({
+    type: 'room-reset',
+    roomId: roomId,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Reset all rooms to safe state
+ */
+function resetGlobalStatus() {
+  logger.info('Manually resetting ALL rooms to safe state');
+
+  rooms.forEach(room => {
+    resetRoomStatus(room.id);
+  });
+
+  broadcast({
+    type: 'global-reset',
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Manually set smoke level for a specific room
+ * @param {string} roomId - The room identifier
+ * @param {number} smokeLevel - The smoke level (0-100)
+ */
+function setManualSmokeLevel(roomId, smokeLevel) {
+  const sensor = sensorData.get(roomId);
+  if (!sensor) {
+    logger.error(`Cannot set smoke level: Room ${roomId} not found`);
+    return;
+  }
+
+  // Validate smoke level
+  const validatedLevel = Math.max(0, Math.min(100, parseFloat(smokeLevel)));
+
+  logger.info(`Manually setting smoke level in ${roomId} to ${validatedLevel}%`);
+
+  sensor.smokeLevel = validatedLevel;
+  sensor.isManuallySet = true;  // Prevent automatic updates
+  sensor.lastUpdate = new Date().toISOString();
+
+  // Update status based on smoke level
+  if (validatedLevel === 0) {
+    sensor.status = 'normal';
+    sensor.isAlarmActive = false;
+  } else if (validatedLevel < sensor.threshold * 0.5) {
+    sensor.status = 'normal';
+    sensor.isAlarmActive = false;
+  } else if (validatedLevel < sensor.threshold) {
+    sensor.status = 'warning';
+    sensor.isAlarmActive = false;
+  } else {
+    sensor.status = 'alarm';
+    sensor.isAlarmActive = true;
+  }
+
+  sensorData.set(roomId, sensor);
+
+  // Trigger or clear alarm as needed
+  if (sensor.isAlarmActive) {
+    triggerAlarm(roomId, validatedLevel);
+  } else {
+    clearAlarm(roomId);
+  }
+
+  // Broadcast update
+  broadcast({
+    type: 'sensor-update',
+    roomId: roomId,
+    data: sensor
+  });
 }
 
 // REST API Endpoints
@@ -372,6 +541,61 @@ app.get('/api/system/status', (req, res) => {
     systemStatus: activeAlarms.length > 0 ? 'alarm' : 'normal',
     timestamp: new Date().toISOString()
   });
+});
+
+// New Control Scenario Endpoints
+
+// Trigger alarm in specific room
+app.post('/api/control/trigger-alarm/:roomId', (req, res) => {
+  const { roomId } = req.params;
+
+  if (!sensorData.has(roomId)) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+
+  triggerRoomAlarm(roomId);
+  res.json({ success: true, roomId, action: 'alarm-triggered' });
+});
+
+// Trigger alarm in all rooms
+app.post('/api/control/trigger-alarm-all', (req, res) => {
+  triggerGlobalAlarm();
+  res.json({ success: true, action: 'global-alarm-triggered', rooms: rooms.length });
+});
+
+// Reset specific room
+app.post('/api/control/reset/:roomId', (req, res) => {
+  const { roomId } = req.params;
+
+  if (!sensorData.has(roomId)) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+
+  resetRoomStatus(roomId);
+  res.json({ success: true, roomId, action: 'room-reset' });
+});
+
+// Reset all rooms
+app.post('/api/control/reset-all', (req, res) => {
+  resetGlobalStatus();
+  res.json({ success: true, action: 'global-reset', rooms: rooms.length });
+});
+
+// Manually set smoke level for a specific room
+app.post('/api/control/set-smoke/:roomId', (req, res) => {
+  const { roomId } = req.params;
+  const { smokeLevel } = req.body;
+
+  if (!sensorData.has(roomId)) {
+    return res.status(404).json({ error: 'Room not found' });
+  }
+
+  if (smokeLevel === undefined || isNaN(smokeLevel)) {
+    return res.status(400).json({ error: 'Invalid smoke level. Must be a number between 0-100' });
+  }
+
+  setManualSmokeLevel(roomId, smokeLevel);
+  res.json({ success: true, roomId, smokeLevel: parseFloat(smokeLevel), action: 'smoke-level-set' });
 });
 
 // Helper function to reset all sensors before scenario
