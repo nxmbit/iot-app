@@ -6,7 +6,6 @@ import SensorPanel from './components/SensorPanel';
 import AlarmControl from './components/AlarmControl';
 import StatusBar from './components/StatusBar';
 import HistoryChart from './components/HistoryChart';
-import ScenarioSelector from './components/ScenarioSelector';
 import ControlPanel from './components/ControlPanel';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -238,15 +237,6 @@ function App() {
     sendCommand({ type: 'test-alarm', roomId });
   };
 
-  // Handle scenario change
-  const handleScenarioChange = async (scenarioId) => {
-    try {
-      await axios.post(`${API_URL}/api/scenarios/${scenarioId}`);
-    } catch (error) {
-      console.error('Error triggering scenario:', error);
-    }
-  };
-
   // New Control Functions
 
   // Handle control actions from ControlPanel
@@ -363,9 +353,6 @@ function App() {
             selectedRoom={selectedRoom}
             onControlAction={handleControlAction}
           />
-
-          {/* Scenario Selector */}
-          <ScenarioSelector onScenarioChange={handleScenarioChange} />
 
           {/* Alarm Controls */}
           <AlarmControl
